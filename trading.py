@@ -8,15 +8,13 @@ todo: separate functions to classes
 started: 5.13.16
 
 todo:
-1. read baseline dates spy from yahoo
-2. read list of /tech/ stocks in from csv
-3. read in /tech/ stocks data into storage unit
-4. join on dates, adj close into one dataframe formatted as such:
-date as idx, spy, stock1, stock2, stock3...stockn as adjclose
-5. format missing values in dataframe
-6. write dataframe out to storage for easier future reading
-7. write out ancillary data from dateframes to files for each stock
-8. implement a timing function
+1. convert reader from live data to csv
+2. add linReg to DF and plot
+3. create subplots
+4. add baseline and similarity DF and subplots
+5. functionality to increase/decrease position based on BBands
+6. add user defined fields as read csv parameters including which mode to run in
+    ./single ./portfolio ./predictive
 """
 
 import pandas as pd
@@ -33,14 +31,13 @@ def main():
     ndays = 20
     sdate = '2013-01-01'
     edate = '2016-05-20'
-    sym = 'nvda'
-    #for data filtering
+    sym = 'lnkd'
+    #for data filtering of multiple stocks csv
     feature = 'MarketCap'
     tol = 2000000000
     bank = 10000  
     #init data for single share
-    df_sym = df_initShareData(sym, sdate, edate)
-    
+    df_sym = df_initShareData(sym, sdate, edate) 
     if len(df_sym) == 0:
         print "ending"
         return -1
@@ -68,19 +65,16 @@ def main():
     print "-----------------------------------------"
     print "[run time]\t{}".format(end-start)
     
-
+    #multiple stock tech analysis
     #filename = "/Users/steveschmidt/trading/shortlist.csv"
     #filename = "/Users/steveschmidt/trading/mediumlist.csv"
     filename = "/Users/steveschmidt/trading/companylist.csv"
-    #let's get the right days & baseline reference using SPY
-    #df_pfolio = df_shareToAdjClose('goog',start_date,end_date)
-    #df_spy = df_pfolio.copy()
+    
     #this is a df of tech sector stocks
     df_Tech = df_readCsv(filename)
     df_Tech = df_filterCompanies(df_Tech, feature, tol)
     df_Tech = df_filterCompanies(df_Tech, 'IPOyear', '2013',1)
     #todo -> add check for ipo before 2016, and market cap over X amount
-    #print "[creating data for:] {}".format([x for x in df_Tech['Symbol']])
     #read in the list of stocks from csv, column symbol has the string to use
     l_stocks = []
     for i in df_Tech['Symbol']:
@@ -88,42 +82,7 @@ def main():
     
     #this line should only be run when new data is needed in mass --> comment out
     #fetchDataToCsv(l_stocks, sdate, edate)
-        
-#        df_tech = df_shareToAdjClose(i, start_date, end_date)
-#        df_pfolio = df_joinDataFrames(df_pfolio, df_tech)
-        #df_pfolio = df_normalize(df_pfolio)
-    #print df_pfolio
-#    df_writeCsv(df_pfolio, "/Users/steveschmidt/trading/prices.csv")
-#    df_pfolio = df_normalize(df_pfolio)
-#    df_writeCsv(df_pfolio, "/Users/steveschmidt/trading/normprices.csv")
-    #single stock analysis testing
-#    df_smaSpy = df_rollingAve(df_spy, 20)
-#    df_stdSpy = df_rollingStd(df_spy, 20)
-#    upper_bollinger, lower_bollinger = df_bollingerBands(df_smaSpy, df_stdSpy)
-#    df_bs = df_spy.join(upper_bollinger, lsuffix="_price",rsuffix='_upper')
-#    df_bs = df_bs.join(lower_bollinger)
-#    l_labels = ['SPY','Rolling Mean', 'Upper Bollinger', 'Lower Bollinger']
-    #plot bollinger bands with simple moving average
-#    plot_singleSymbol(df_spy, [df_smaSpy, upper_bollinger, lower_bollinger], l_labels)
-    #print df_spy
-#    ret= 0
-#    hold = 0 
-#    print df_bs
-##    for index,row in df_bs.iterrows():
-#        if hold == 0 and row['goog'] > row['goog_price']:
-#            price = buy(row['goog_price'])
-#            print "[buy:] {} stock".format(index)
-#            hold = 1
-#        if hold != 0 and row['goog_upper'] < row['goog_price']:
-#            print "[sell:] {} stock".format(index)
-#            ret += sell(row['goog_price'],price )
-#            hold = 0
-#        
-#    print "[return for period: ] {}".format(ret)
-#    end = time.clock()
-#    df_pfolio.plot(title="Trends", fontsize=2)
-#    plt.show()
-#    print "\n[run time:] {}".format(end-start)
+
 
 def df_initShareData(sym, sdate, edate):
     try:
@@ -313,15 +272,8 @@ def df_bollingerBands(df_rMean, df_rStd):
     upper = df_rMean + df_rStd*2
     lower = df_rMean - df_rStd*2
     return upper, lower
-    
-def plt_plot():
-    
-    return 0
-    
+     
 def l_linReg(l_prices):
-    return 0
-    
-def type_formatData(data, type='nparray'):
     return 0
     
 def df_rollingAve(df_symbol, ndays):
@@ -342,9 +294,10 @@ def l_dailyPortfolioBalance():
 def fetchDataToCsv(l_stocks, start_date, end_date):
     try:
         for symbol in l_stocks:
-            s_symbol = Share(symbol)
-            l_symbol = s_symbol.get_historical(start_date, end_date)
-            df_symbol = pd.DataFrame(l_symbol)
+            df_symbol = df_initShareData(symbol, start_date, end_date)
+            if len(df_symbol) == 0:
+                print "[error]\t{} bad data fetch".format(symbol)
+                continue
             df_symbol['Date'] = pd.to_datetime(df_symbol['Date'])
             df_symbol['Adj_Close'] = pd.to_numeric(df_symbol['Adj_Close'])
             df_symbol = df_symbol.rename(columns={'Adj_Close':'{}'.format(symbol)})
