@@ -7,14 +7,28 @@ title: algorithmic trading functions
 todo: separate functions to classes
 started: 5.13.16
 
+
+change log:
+5.22 added csv handling, changed data storage filenames, cheap subplots
+
 todo:
-1. convert reader from live data to csv
-2. add linReg to DF and plot
-3. create subplots
-4. add baseline and similarity DF and subplots
-5. functionality to increase/decrease position based on BBands
-6. add user defined fields as read csv parameters including which mode to run in
+1. add linReg to DF and plot
+2. add baseline and similarity DF and subplots
+3. functionality to increase/decrease position based on BBands
+4. add user defined fields as read csv parameters including which mode to run in
     ./single ./portfolio ./predictive
+5. do better simulation function
+
+setup.py should do a data fetch into directories
+database? eh
+
+classes:
+DataIO
+SingleShareStats -> contain storage for stats used in multi
+Portfolio
+Optimizer
+Predict
+
 """
 
 import pandas as pd
@@ -27,62 +41,78 @@ import math
 def main():
     #always time to improve
     start = time.clock()   
-    #user fields -> single stock
-    ndays = 20
-    sdate = '2013-01-01'
+    path = "/Users/steveschmidt/trading/data/2015_curr/"
+    sdate = '2015-01-01'
     edate = '2016-05-20'
-    sym = 'lnkd'
-    #for data filtering of multiple stocks csv
-    feature = 'MarketCap'
-    tol = 2000000000
-    bank = 10000  
-    #init data for single share
-    df_sym = df_initShareData(sym, sdate, edate) 
-    if len(df_sym) == 0:
-        print "ending"
-        return -1
-    #get statistics for tech analysis      
-    df_sym = df_initShareFrame(df_sym,sym)
-    if len(df_sym) == 0:
-        print "ending"
-        return -1
-    #first get daily results and cum results
-    df_sharpe = df_dailyReturns(df_sym)
-    sharpe = sharpeRatio(df_sharpe, len(df_sym))
-    df_sym = df_statBuilder(df_sym, ndays)
-    if len(df_sym) == 0:
-        print "ending"
-        return -1
-    #FS = Full Single Stock for writing out
-    df_writeCsv(df_sym, "/Users/steveschmidt/trading/FS_{}.csv".format(sym))
-    #simulation ---> assumes zero shares held to start
-    profit = singleSimulation(df_sym, bank)
-    reportSingleSimulation(profit, bank)
+    #single stock technical analysis -> todo make this a class file to import    
+    ssta = 0
+    if ssta == 1:
+        #user fields -> single stock
+        ndays = 20
+        sym = 'NFLX'
+        #for simulation
+        bank = 10000  
+        #init data for single share
+        #df_sym = df_initShareData(sym, sdate, edate) 
+        #use this -> will try and read csv, else fill database with new and then read
+        df_sym = df_initShareCsvData(path,sym,sdate,edate)   
+        if len(df_sym) == 0:
+            print "ending"
+            return -1
+        #get statistics in df --> bbands      
+        df_sym = df_initShareFrame(df_sym,sym)
+        if len(df_sym) == 0:
+            print "ending"
+            return -1
+        #get daily results and cum results
+        df_sharpe = df_dailyReturns(df_sym)
+        sharpe = sharpeRatio(df_sharpe, len(df_sym))
+        df_sym = df_statBuilder(df_sym, ndays)
+        if len(df_sym) == 0:
+            print "ending"
+            return -1
+            
+        #Results Single Stock for writing out
+        df_writeCsv(df_sym, "/Users/steveschmidt/trading/bollinger/{}_bb.csv".format(sym))
+        
+        #simulation ---> assumes zero shares held to start
+        profit = singleSimulation(df_sym, bank)
+        reportSingleSimulation(profit, bank)    
+        print "[cum var]\t{}".format(cumulativeReturns(df_sym[sym]))
+        print "[sharpe]\t{}".format(sharpe[sym])
+        #plot all dataframes for static analysis
+        plotResults([df_sym, df_sharpe])
     
-    print "[cum var]\t{}".format(cumulativeReturns(df_sym[sym]))
-    print "[sharpe]\t{}".format(sharpe[sym])
+    #multiple stock technical analysis --> todo make this a class to import
+    msta = 0
+    if msta == 1:
+        #if this is set to 1, all companies in filename below will have data generated -> CAREFUL
+        collect = 0
+        #for data filtering of multiple stocks csv
+        feature = 'MarketCap'
+        tol = 2000000000
+        #filename = "/Users/steveschmidt/trading/shortlist.csv"
+        #filename = "/Users/steveschmidt/trading/mediumlist.csv"
+        filename = "/Users/steveschmidt/trading/companylist.csv"
+        
+        if collect == 1:
+            #this is a df of tech sector stocks
+            df_Tech = df_readCsv(filename)
+            df_Tech = df_filterCompanies(df_Tech, feature, tol)
+            #for now the ipo year must match path above
+            df_Tech = df_filterCompanies(df_Tech, 'IPOyear', '2015',1)
+            #todo -> add check for ipo before 2016, and market cap over X amount
+            #read in the list of stocks from csv, column symbol has the string to use
+            l_stocks = []
+            for i in df_Tech['Symbol']:
+                l_stocks.append(i)
+            
+            #this line should only be run when new data is needed in mass --> comment out
+            fetchDataToCsv(l_stocks, path, sdate, edate)
     end = time.clock()
     print "-----------------------------------------"
     print "[run time]\t{}".format(end-start)
-    
-    #multiple stock tech analysis
-    #filename = "/Users/steveschmidt/trading/shortlist.csv"
-    #filename = "/Users/steveschmidt/trading/mediumlist.csv"
-    filename = "/Users/steveschmidt/trading/companylist.csv"
-    
-    #this is a df of tech sector stocks
-    df_Tech = df_readCsv(filename)
-    df_Tech = df_filterCompanies(df_Tech, feature, tol)
-    df_Tech = df_filterCompanies(df_Tech, 'IPOyear', '2013',1)
-    #todo -> add check for ipo before 2016, and market cap over X amount
-    #read in the list of stocks from csv, column symbol has the string to use
-    l_stocks = []
-    for i in df_Tech['Symbol']:
-        l_stocks.append(i)
-    
-    #this line should only be run when new data is needed in mass --> comment out
-    #fetchDataToCsv(l_stocks, sdate, edate)
-
+    return 0
 
 def df_initShareData(sym, sdate, edate):
     try:
@@ -94,6 +124,21 @@ def df_initShareData(sym, sdate, edate):
         print "[error] receiving data from host..please try again or load from csv"
         df = pd.DataFrame()
         return df
+        
+def df_initShareCsvData(path, sym, sdate, edate):
+    try:
+        df = pd.read_csv("{}{}".format(path,sym))
+        return df
+    except:
+        s = fetchDataToCsv([sym],path, sdate, edate)        
+        if s == 0:
+            df = pd.read_csv("{}{}.csv".format(path,sym))
+            print "[read]\t{}".format(sym)
+            return df
+        else:
+            print "[error] failed init from csv"
+            return pd.DataFrame()
+    
         
 def df_initShareFrame(df,symbol):
     df = df.copy()
@@ -164,7 +209,7 @@ def singleSimulation(df, money):
     if hold == 1:
         print "-----------------------------------------"
         print "[long] \t{}\t{}\t{}\t{}".format(sym,shares,df[sym][-1],money)
-    df.plot()
+    #df.plot()
     return ret
     
 #sum of all dailyReturns()/n days
@@ -235,13 +280,10 @@ def stdDailyReturns(df):
     s = df.std()
     return s
 
-def plot_singleSymbol(df_symbol, l_toplot, l_labels):
-    ax = df_symbol.plot(title="Bollinger Bands", label="{}".format(l_labels[0]))
-    for i in range(0,len(l_toplot)):
-        l_toplot[i].plot(label="{}".format(l_labels[i]), ax=ax)
-    ax.set_xlabel("Date")
-    ax.set_ylabel("Price")
-    plt.legend(l_labels)
+def plotResults(l_toplot):
+    fig, ax = plt.subplots(len(l_toplot),1)
+    for idx,i in enumerate(l_toplot):
+        i.plot(ax=ax[idx])
     plt.show()
    
    
@@ -291,7 +333,8 @@ def l_perturb(l_prices):
 def l_dailyPortfolioBalance():
     return 0
     
-def fetchDataToCsv(l_stocks, start_date, end_date):
+#modify this by hand for now ->should only be done once!
+def fetchDataToCsv(l_stocks, path,start_date, end_date):
     try:
         for symbol in l_stocks:
             df_symbol = df_initShareData(symbol, start_date, end_date)
@@ -300,9 +343,9 @@ def fetchDataToCsv(l_stocks, start_date, end_date):
                 continue
             df_symbol['Date'] = pd.to_datetime(df_symbol['Date'])
             df_symbol['Adj_Close'] = pd.to_numeric(df_symbol['Adj_Close'])
-            df_symbol = df_symbol.rename(columns={'Adj_Close':'{}'.format(symbol)})
+            #df_symbol = df_symbol.rename(columns={'Adj_Close':'{}'.format(symbol)})
             df_symbol = df_symbol.set_index('Date').sort_index() 
-            df_writeCsv(df_symbol, "/Users/steveschmidt/trading/data/2013_2015/F_{}.csv".format(symbol))
+            df_writeCsv(df_symbol, "{}{}.csv".format(path,symbol))
             print "[fetch]\t{}".format(symbol)
         return 0
     except:
