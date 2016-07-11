@@ -1,4 +1,7 @@
+#include "headers.h"
+#include "share.h"
 #include "database.h"
+#include "entry.h"
 /*master todo
 
 creater parameter file reader [main.cpp]
@@ -29,6 +32,13 @@ int handle_cli(int len, char ** args){
 
 }
 
+void testHarness(){
+    /*test share class*/
+    Share goog = Share("goog");
+    std::cout<<goog.getSymbol()<<std::endl;
+
+}   
+
 int main(int argc, char ** argv){
 	std::cout<<"beginning Trading simulation"<<std::endl;
     if( argc < 3) {
@@ -36,6 +46,8 @@ int main(int argc, char ** argv){
     }
     else{
         handle_cli(argc, argv);
+        /*test harness for now*/
+        testHarness();
     }  
 	return 0;
 }
