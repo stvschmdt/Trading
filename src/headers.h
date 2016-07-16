@@ -7,6 +7,9 @@
 #include <algorithm>
 #include <vector>
 #include <string>
+#include <fstream>
+#include <sstream>
 
+typedef std::vector<std::vector<std::string> > str_matrix;
 
 #endif

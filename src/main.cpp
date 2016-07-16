@@ -36,7 +36,8 @@ void testHarness(){
     /*test share class*/
     Share goog = Share("goog");
     std::cout<<goog.getSymbol()<<std::endl;
-
+    goog.readCsv("../data/2015_curr/AAPL.csv");
+    goog.showData();
 }   
 
 int main(int argc, char ** argv){

@@ -7,10 +7,11 @@ class Share{
     public:
         Share(std::string sym){symbol = sym;}
         std::string getSymbol(){return symbol;}
-        void readCsv(std::string filename);
+        void readCsv(std::string filename, int show=0);
+        void showData();
     private:
         std::string symbol;
-        std::vector < int > data;
+        str_matrix data;
 
 };
 
