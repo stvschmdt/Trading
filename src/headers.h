@@ -1,6 +1,7 @@
 #ifndef HEADER_H_
 #define HEADER_H_
 
+/*c++ includes */
 #include <stdlib.h>
 #include <iostream>
 #include <sqlite3.h>
@@ -10,6 +11,7 @@
 #include <fstream>
 #include <sstream>
 
-typedef std::vector<std::vector<std::string> > str_matrix;
+/*typedef structures, vectors, helpers*/
+
 
 #endif
