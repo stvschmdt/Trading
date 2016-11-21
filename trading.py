@@ -73,7 +73,7 @@ def main():
             return -1
             
         #Results Single Stock for writing out
-        df_writeCsv(df_sym, "/Users/steveschmidt/trading/bollinger/{}_bb.csv".format(sym))
+        df_writeCsv(df_sym, "{}_bb.csv".format(sym))
         
         #simulation ---> assumes zero shares held to start
         profit = singleSimulation(df_sym, bank)
@@ -93,7 +93,7 @@ def main():
         tol = 2000000000
         #filename = "/Users/steveschmidt/trading/shortlist.csv"
         #filename = "/Users/steveschmidt/trading/mediumlist.csv"
-        filename = "/Users/steveschmidt/trading/companylist.csv"
+        filename = "companylist.csv"
         
         if collect == 1:
             #this is a df of tech sector stocks
