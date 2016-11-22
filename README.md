@@ -21,20 +21,38 @@ Various technicals and ML algorithms will be implemented and tested to determine
 Dev Plan
 
 (drivers for entire platform)
+
 Controller -> Loader
+
 User Interface -> Loader
+
 (get and set data - various formatting and storage)
+
 Loader -> Symbol(s)
+
 Loader -> File_IO
+
 Loader -> DataFrame
+
 Loader/DataFrame -> Lab
+
 (computational work)
+
 Lab -> Technical Analysis
+
 Lab -> ML Analysis
+
 Technical Analysis -> Lab
+
 ML Analysis -> Lab
+
 (experimentation and decision making - Brain)
+
 Lab -> Simulator
+
 (tracking and testing)
+
 Simulator -> Account_Balances
+
 Simulator -> Trading_Simulator
+
