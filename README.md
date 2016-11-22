@@ -1,11 +1,19 @@
 # trade_sim
+
 created by steve schmidt 2016
-python 2.7+, pandas 0.17+
+
+python 2.7+
+
+pandas 0.17+
 
 -- data loading and storage for share symbol information using yahoo_finance import
+
 -- single share analysis (static and predictive)
+
 -- portfolio analysis and optimization
+
 -- simulations
+
 -- overall science
 
 Various technicals and ML algorithms will be implemented and tested to determine optimal trading strategies for simulation
