@@ -1,6 +1,6 @@
 # trade_sim
-# created by steve schmidt 2016
-# python 2.7+, pandas 0.17+
+created by steve schmidt 2016
+python 2.7+, pandas 0.17+
 
 -- data loading and storage for share symbol information using yahoo_finance import
 -- single share analysis (static and predictive)
